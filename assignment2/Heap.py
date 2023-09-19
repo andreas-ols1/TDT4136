@@ -27,6 +27,9 @@ class Min_Cell_Heap:
     def __repr__(self) -> str:
         return str(self.A)
 
+    def __contains__(self, x: Cell) -> bool:
+        return x in self.A
+
     def parent(self, i: int) -> int:
         return i // 2
 
@@ -103,7 +106,7 @@ class Min_Cell_Heap:
             Cell: The Cell object containing the minimum key.
         """
         min = self.heap_min()
-        self.A[0] = self.A[-1]
+        self.A[0], self.A[-1] = self.A[-1], self.A[0]
         self.min_heapify(0)
         self.A.remove(min)
         return min
