@@ -186,8 +186,16 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
-        # TODO: YOUR CODE HERE
-        pass
+        while len(queue):
+            (xi, xj) = queue.pop()
+            if self.revise(assignment, xi, xj):
+                if not assignment[xi]:
+                    return False
+                for xk in self.get_all_neighboring_arcs(xi):
+                    if not xk[0] == xj:
+                        queue.append((xk[0],xi))
+                        continue
+        return True
 
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
@@ -198,9 +206,29 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        # TODO: YOUR CODE HERE
-        pass
+        revised = False
+    
+        constraints1 = [i for i in self.constraints[i][j]]
+        #constraints2 = [j for j in self.constraints[j][i]]
+        constraints = constraints1
+        for x in assignment[i]:
+            constraint_satisfied = False
+            for y in assignment[j]:
+                for const in constraints:
+                    if const == (x,y):
+                        constraint_satisfied = True
+            if not constraint_satisfied:
+                assignment[i].remove(x)
+                revised = True
+        return revised
 
+    def to_string(self, var):
+        return self.domains[var]
+    
+    def test_ac3(self):
+        assignment = copy.deepcopy(self.domains)
+        print(self.inference(assignment, self.get_all_arcs()))
+        
 
 def create_map_coloring_csp():
     """Instantiate a CSP representing the map coloring problem from the
@@ -276,3 +304,10 @@ def print_sudoku_solution(solution):
         print("")
         if row == 2 or row == 5:
             print('------+-------+------')
+
+def main():
+    #csp = create_sudoku_csp('assignment3/easy.txt')
+    csp = create_map_coloring_csp()
+    csp.test_ac3()
+
+main()
