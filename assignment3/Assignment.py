@@ -5,6 +5,9 @@
 import copy
 from itertools import product as prod
 
+# To check how many times the backtrack is called and it fails
+backtrack_called_times = 0
+fail = 0
 
 class CSP:
     def __init__(self):
@@ -144,6 +147,7 @@ class CSP:
         # Call backtrack with the partial assignment 'assignment'
         return self.backtrack(assignment)
 
+
     def backtrack(self, assignment):
         """The function 'Backtrack' from the pseudocode in the
         textbook.
@@ -168,8 +172,25 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        # TODO: YOUR CODE HERE
-        pass
+        global backtrack_called_times
+        backtrack_called_times += 1
+
+        if all(len(value) == 1 for value in assignment.values()): 
+            return assignment
+
+        var = self.select_unassigned_variable(assignment)
+
+        for value in assignment[var]:
+            assigno = copy.deepcopy(assignment)
+            assigno[var] = [value]
+            if self.inference(assigno, self.get_all_arcs()):
+                result = self.backtrack(assigno)
+                if result != False:
+                    return result
+        global fail
+        fail += 1
+        return False
+        
 
     def select_unassigned_variable(self, assignment):
         """The function 'Select-Unassigned-Variable' from the pseudocode
@@ -177,8 +198,12 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-        # TODO: YOUR CODE HERE
-        pass
+        shortest_legal = float("inf")
+        for key, value in assignment.items():
+            if len(value) >= 2 and len(value) < shortest_legal:
+                shortest_legal = len(value)
+                shortest = key
+        return shortest
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -208,9 +233,8 @@ class CSP:
         """
         revised = False
     
-        constraints1 = [i for i in self.constraints[i][j]]
-        #constraints2 = [j for j in self.constraints[j][i]]
-        constraints = constraints1
+        constraints = [i for i in self.constraints[i][j]]
+
         for x in assignment[i]:
             constraint_satisfied = False
             for y in assignment[j]:
@@ -306,8 +330,10 @@ def print_sudoku_solution(solution):
             print('------+-------+------')
 
 def main():
-    #csp = create_sudoku_csp('assignment3/easy.txt')
-    csp = create_map_coloring_csp()
-    csp.test_ac3()
+    csp = create_sudoku_csp('assignment3/veryhard.txt')
+
+    print_sudoku_solution(csp.backtracking_search())
+    print("Number of backtracks:", backtrack_called_times)
+    print("Number of epic fails:", fail)
 
 main()
