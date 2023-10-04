@@ -175,14 +175,23 @@ class CSP:
         global backtrack_called_times
         backtrack_called_times += 1
 
+        # The success check, if all keys have a domain of 1, stop.
         if all(len(value) == 1 for value in assignment.values()): 
             return assignment
 
+        # Using the simple heuristic of "smallest domain, non-decided variable"
+        # (Domain is bigger than 1)
         var = self.select_unassigned_variable(assignment)
 
+        # Go through all values in the domain of the given var
         for value in assignment[var]:
+            # Need to create a deep copy so no iterations affect the others
             assigno = copy.deepcopy(assignment)
+            # Start by giving the single value in assignment to
+            # the found shortest variable.
             assigno[var] = [value]
+            # If the domain is reduced with inference, we keep going. If not,
+            # fail.
             if self.inference(assigno, self.get_all_arcs()):
                 result = self.backtrack(assigno)
                 if result != False:
@@ -198,10 +207,16 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
+        # Initialize smallest value to infinity, so
+        # it always returns a variable from assignment
         shortest_legal = float("inf")
+
         for key, value in assignment.items():
+            # Check that variable is not already decided, and if so if
+            # smaller than the current smallest domain
             if len(value) >= 2 and len(value) < shortest_legal:
                 shortest_legal = len(value)
+                # The actual variable to be returned.
                 shortest = key
         return shortest
 
@@ -211,12 +226,20 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
+        # As per the textbook: Queue is all the initial arcs that 
+        # should be visited. 
         while len(queue):
+            # Initialize the first two variables from the queue
             (xi, xj) = queue.pop()
             if self.revise(assignment, xi, xj):
                 if not assignment[xi]:
+                    # If the value does not exist, return False.
                     return False
                 for xk in self.get_all_neighboring_arcs(xi):
+                    # As long as the arc is not xj from the queue,
+                    # we append the new value. Need to use 0-indexing
+                    # since the arcs are returned as tuple and we are
+                    # only interested in the first key.
                     if not xk[0] == xj:
                         queue.append((xk[0],xi))
                         continue
@@ -231,10 +254,16 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
+        # We start by setting revised to false
         revised = False
-    
-        constraints = [i for i in self.constraints[i][j]]
 
+        # We only need to add one side of the constraints,
+        # as we will also consider (j,i) later
+        constraints = [i for i in self.constraints[i][j]]
+        
+        # The main for-loop. If a constraint is satisfied, it will set
+        # constraint satisfied to true, and remove the given value from i's
+        # list. If not, we return false, since it wasn't revised.
         for x in assignment[i]:
             constraint_satisfied = False
             for y in assignment[j]:
@@ -331,7 +360,6 @@ def print_sudoku_solution(solution):
 
 def main():
     csp = create_sudoku_csp('assignment3/veryhard.txt')
-
     print_sudoku_solution(csp.backtracking_search())
     print("Number of backtracks:", backtrack_called_times)
     print("Number of epic fails:", fail)
