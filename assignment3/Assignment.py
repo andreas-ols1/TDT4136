@@ -262,8 +262,10 @@ class CSP:
         constraints = [i for i in self.constraints[i][j]]
         
         # The main for-loop. If a constraint is satisfied, it will set
-        # constraint satisfied to true, and remove the given value from i's
-        # list. If not, we return false, since it wasn't revised.
+        # constraint satisfied to true, and it won't remove the given value from i's
+        # list, and we return false. If it is false, and there isn't any value that
+        # satisfies the constraint, there is no reason to keep it in the domain, since
+        # it cannot be arc-consistent, and we return true since it was revised.
         for x in assignment[i]:
             constraint_satisfied = False
             for y in assignment[j]:
