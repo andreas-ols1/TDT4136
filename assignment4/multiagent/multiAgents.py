@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+from pacman import GameState
 
 from game import Agent
 
@@ -146,7 +147,21 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
 
-        def min_value(gameState, depth, agentIndex):
+        def min_value(
+            gameState: GameState, depth: int, agentIndex: int
+        ) -> float:
+            """
+            This function represents the 'MIN' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+
+            Returns:
+            The minimum utility value for the current game state based on a depth-limited search.
+            """
+            # Terminal state check
             if gameState.isWin() or gameState.isLose() or depth == 0:
                 return self.evaluationFunction(gameState)
 
@@ -169,7 +184,21 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 min_val = min(min_val, evaluation)
             return min_val
 
-        def max_value(gameState, depth, agentIndex):
+        def max_value(
+            gameState: GameState, depth: int, agentIndex: int
+        ) -> tuple[float, str]:
+            """
+            This function represents the 'MAX' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+
+            Returns:
+            The maximum utility value for the current game state based on a depth-limited search and the best action to achieve that value.
+            """
+            # Terminal state check
             if gameState.isWin() or gameState.isLose() or depth == 0:
                 return self.evaluationFunction(gameState), None
 
@@ -199,7 +228,29 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        def min_value(gameState, depth, agentIndex, alpha, beta):
+        def min_value(
+            gameState: GameState,
+            depth: int,
+            agentIndex: int,
+            alpha: float,
+            beta: float,
+        ) -> float:
+            """
+            This function represents the 'MIN' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+            - alpha: The current best lower bound for the value.
+            - beta: The current best upper bound for the value.
+
+            Returns:
+            The minimum utility value for the current game state based on a depth-limited search.
+
+            Parameters alpha and beta are used to prune branches from the search tree to reduce space complexity.
+            """
+            # Terminal state check
             if gameState.isWin() or gameState.isLose() or depth == 0:
                 return self.evaluationFunction(gameState)
 
@@ -229,7 +280,29 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     break
             return min_val
 
-        def max_value(gameState, depth, agentIndex, alpha, beta):
+        def max_value(
+            gameState: GameState,
+            depth: int,
+            agentIndex: int,
+            alpha: float,
+            beta: float,
+        ) -> tuple[float, str]:
+            """
+            This function represents the 'MAX' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+            - alpha: The current best lower bound for the value.
+            - beta: The current best upper bound for the value.
+
+            Returns:
+            The maximum utility value for the current game state based on a depth-limited search and the best action to achieve that value.
+
+            Parameters alpha and beta are used to prune branches from the search tree to reduce space complexity.
+            """
+            # Terminal state check
             if gameState.isWin() or gameState.isLose() or depth == 0:
                 return self.evaluationFunction(gameState), None
 
