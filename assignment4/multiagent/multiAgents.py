@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -15,8 +15,10 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+from pacman import GameState
 
 from game import Agent
+
 
 class ReflexAgent(Agent):
     """
@@ -27,7 +29,6 @@ class ReflexAgent(Agent):
     it in any way you see fit, so long as you don't touch our method
     headers.
     """
-
 
     def getAction(self, gameState):
         """
@@ -42,10 +43,16 @@ class ReflexAgent(Agent):
         legalMoves = gameState.getLegalActions()
 
         # Choose one of the best actions
-        scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
+        scores = [
+            self.evaluationFunction(gameState, action) for action in legalMoves
+        ]
         bestScore = max(scores)
-        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        bestIndices = [
+            index for index in range(len(scores)) if scores[index] == bestScore
+        ]
+        chosenIndex = random.choice(
+            bestIndices
+        )  # Pick randomly among the best
 
         "Add more of your code here if you want to"
 
@@ -71,10 +78,13 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        newScaredTimes = [
+            ghostState.scaredTimer for ghostState in newGhostStates
+        ]
 
         "*** YOUR CODE HERE ***"
         return successorGameState.getScore()
+
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -85,6 +95,7 @@ def scoreEvaluationFunction(currentGameState):
     (not reflex agents).
     """
     return currentGameState.getScore()
+
 
 class MultiAgentSearchAgent(Agent):
     """
@@ -101,10 +112,11 @@ class MultiAgentSearchAgent(Agent):
     is another abstract class.
     """
 
-    def __init__(self, evalFn = 'scoreEvaluationFunction', depth = '2'):
-        self.index = 0 # Pacman is always agent index 0
+    def __init__(self, evalFn="scoreEvaluationFunction", depth="2"):
+        self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -134,8 +146,76 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def min_value(
+            gameState: GameState, depth: int, agentIndex: int
+        ) -> float:
+            """
+            This function represents the 'MIN' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+
+            Returns:
+            The minimum utility value for the current game state based on a depth-limited search.
+            """
+            # Terminal state check
+            if gameState.isWin() or gameState.isLose() or depth == 0:
+                return self.evaluationFunction(gameState)
+
+            min_val = float("inf")
+            for action in gameState.getLegalActions(agentIndex):
+                # Check if Pac-Man is the next to make a move
+                if agentIndex == gameState.getNumAgents() - 1:
+                    evaluation, _ = max_value(
+                        gameState.generateSuccessor(agentIndex, action),
+                        depth - 1,
+                        0,
+                    )
+                # If not, the next ghost will make a move
+                else:
+                    evaluation = min_value(
+                        gameState.generateSuccessor(agentIndex, action),
+                        depth,
+                        agentIndex + 1,
+                    )
+                min_val = min(min_val, evaluation)
+            return min_val
+
+        def max_value(
+            gameState: GameState, depth: int, agentIndex: int
+        ) -> tuple[float, str]:
+            """
+            This function represents the 'MAX' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+
+            Returns:
+            The maximum utility value for the current game state based on a depth-limited search and the best action to achieve that value.
+            """
+            # Terminal state check
+            if gameState.isWin() or gameState.isLose() or depth == 0:
+                return self.evaluationFunction(gameState), None
+
+            max_val, best_action = float("-inf"), None
+            for action in gameState.getLegalActions(0):
+                evaluation = min_value(
+                    gameState.generateSuccessor(0, action),
+                    depth,
+                    agentIndex + 1,
+                )
+                if evaluation > max_val:
+                    max_val = evaluation
+                    best_action = action
+            return max_val, best_action
+
+        return max_value(gameState, self.depth, 0)[1]
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -147,11 +227,110 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def min_value(
+            gameState: GameState,
+            depth: int,
+            agentIndex: int,
+            alpha: float,
+            beta: float,
+        ) -> float:
+            """
+            This function represents the 'MIN' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+            - alpha: The current best lower bound for the value.
+            - beta: The current best upper bound for the value.
+
+            Returns:
+            The minimum utility value for the current game state based on a depth-limited search.
+
+            Parameters alpha and beta are used to prune branches from the search tree to reduce space complexity.
+            """
+            # Terminal state check
+            if gameState.isWin() or gameState.isLose() or depth == 0:
+                return self.evaluationFunction(gameState)
+
+            min_val = float("inf")
+            for action in gameState.getLegalActions(agentIndex):
+                # Check if Pac-Man is the next to make a move
+                if agentIndex == gameState.getNumAgents() - 1:
+                    evaluation, _ = max_value(
+                        gameState.generateSuccessor(agentIndex, action),
+                        depth - 1,
+                        0,
+                        alpha,
+                        beta,
+                    )
+                # If not, the next ghost will make a move
+                else:
+                    evaluation = min_value(
+                        gameState.generateSuccessor(agentIndex, action),
+                        depth,
+                        agentIndex + 1,
+                        alpha,
+                        beta,
+                    )
+                min_val = min(min_val, evaluation)
+                beta = min(beta, min_val)
+                if min_val < alpha:
+                    break
+            return min_val
+
+        def max_value(
+            gameState: GameState,
+            depth: int,
+            agentIndex: int,
+            alpha: float,
+            beta: float,
+        ) -> tuple[float, str]:
+            """
+            This function represents the 'MAX' value calculation in the minimax algorithm, which is used for game playing AI.
+
+            Parameters:
+            - gameState: The current state of the game.
+            - depth: The current depth of the search in the game tree.
+            - agentIndex: The index of the agent making the move.
+            - alpha: The current best lower bound for the value.
+            - beta: The current best upper bound for the value.
+
+            Returns:
+            The maximum utility value for the current game state based on a depth-limited search and the best action to achieve that value.
+
+            Parameters alpha and beta are used to prune branches from the search tree to reduce space complexity.
+            """
+            # Terminal state check
+            if gameState.isWin() or gameState.isLose() or depth == 0:
+                return self.evaluationFunction(gameState), None
+
+            max_val, best_action = float("-inf"), None
+            for action in gameState.getLegalActions(0):
+                evaluation = min_value(
+                    gameState.generateSuccessor(0, action),
+                    depth,
+                    agentIndex + 1,
+                    alpha,
+                    beta,
+                )
+                if evaluation > max_val:
+                    max_val = evaluation
+                    best_action = action
+                if evaluation > beta:
+                    break
+                alpha = max(alpha, evaluation)
+            return max_val, best_action
+
+        return max_value(
+            gameState, self.depth, 0, float("-inf"), float("inf")
+        )[1]
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
-      Your expectimax agent (question 4)
+    Your expectimax agent (question 4)
     """
 
     def getAction(self, gameState):
@@ -164,6 +343,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -173,6 +353,7 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
+
 
 # Abbreviation
 better = betterEvaluationFunction
